@@ -8,27 +8,45 @@
 
 #import "HappinessViewController.h"
 
-@interface HappinessViewController ()
 
+@interface HappinessViewController () <FaceViewDataSource>
+@property (nonatomic, weak) IBOutlet FaceView *faceView;
 @end
 
 @implementation HappinessViewController
+@synthesize happiness = _happiness;
+@synthesize faceView = _faceView;
 
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
+-(float)smileForFaceView:(FaceView *)sender {
+    return (self.happiness - 50) / 50.0;
 }
 
-- (void)viewDidUnload
-{
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
+- (void) setHappiness:(int)happiness {
+    if (_happiness != happiness) {
+        _happiness = happiness;
+        [self.faceView setNeedsDisplay];
+    }
 }
 
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-    return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
+- (void)setFaceView:(FaceView *)faceView {
+    _faceView = faceView;
+    [self.faceView addGestureRecognizer:[[UIPinchGestureRecognizer alloc] initWithTarget:self.faceView action:@selector(pinch:)]];
+    
+    [self.faceView addGestureRecognizer:[[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handleHappinessGesture:)]];
+    
+    self.faceView.dataSource = self;
+}
+
+-(void)handleHappinessGesture:(UIPanGestureRecognizer *)gesture {
+    if(gesture.state == UIGestureRecognizerStateChanged || gesture.state == UIGestureRecognizerStateEnded ) {
+        CGPoint translation = [gesture translationInView:self.faceView];
+        self.happiness -= translation.y/2;
+        [gesture setTranslation:CGPointZero inView:self.faceView];
+    }
+}
+
+-(BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
+    return YES;
 }
 
 @end
